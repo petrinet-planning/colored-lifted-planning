@@ -11,11 +11,11 @@ from petrinet.value import ProductColorValue
 from petrinet.variable import *
 from petrinet.transition import *
 from petrinet.weighted_values import WeightedValues
-from unified_planning.model import Problem, Action, OperatorKind
+from unified_planning.model import Problem, Action, OperatorKind, FNode
 
 
-def translate(name: str, problem: Problem) -> tuple[PetriNet, Marking]:
-    pn = petrinet.PetriNet("Blocksworld_p01")
+def translate(problem: Problem) -> tuple[PetriNet, Marking]:
+    pn = petrinet.PetriNet(problem.name)
 
     # Objects
     dotColor = DotColor()
@@ -76,7 +76,7 @@ def translate(name: str, problem: Problem) -> tuple[PetriNet, Marking]:
         occurrence_types[in_pre |      0 | in_add] = "requires"
         occurrence_types[in_pre |      0 |      0] = "requires"
         occurrence_types[     0 | in_del | in_add] = "adds"
-        occurrence_types[     0 | in_del |      0] = "UNSUPPORTED"
+        occurrence_types[     0 | in_del |      0] = "UNSUPPORTED"  # todo: Occurs in snake benchmark
         occurrence_types[     0 |      0 | in_add] = "adds"
         occurrence_types[     0 |      0 |      0] = "not in"
 
@@ -91,25 +91,46 @@ def translate(name: str, problem: Problem) -> tuple[PetriNet, Marking]:
 
     pred_to_place_regex = re.compile("^[\\w_-]+")  # Finds first bit, until first parenthesis
     pred_parameter_regex = re.compile("([\\w_-]+)(?:, |\\))")  # Finds every variable, as any word ending with comma or closing parenthesis
+
+    def pred_to_place_and_variables(pred: str) -> tuple[Place, dict[Value, int]]:
+        place = places[pred_to_place_regex.search(pred).group()]
+        action_parameter_names = pred_parameter_regex.findall(pred)
+
+        arc_weights: dict[Value, int] = dict()
+        if len(action_parameter_names) > 1:
+            action_parameters = [variables[param_name] for param_name in action_parameter_names]
+            value = ProductColorValue(param_colors[len(action_parameter_names)], action_parameters)
+            arc_weights[value] = 1
+        elif len(action_parameter_names) == 1:
+            arc_weights[variables[action_parameter_names[0]]] = 1
+        else:
+            arc_weights[dotLiteral] = 1
+
+        return place, arc_weights
+
+    def pred_to_place_and_literals(pred: str) -> tuple[Place, dict[Value, int]]:
+        place = places[pred_to_place_regex.search(pred).group()]
+        action_parameter_names = pred_parameter_regex.findall(pred)
+
+        arc_weights: dict[Value, int] = dict()
+        if len(action_parameter_names) > 1:
+            action_parameters = [objects[param_name] for param_name in action_parameter_names]
+            value = ProductColorLiteral(param_colors[len(action_parameter_names)], action_parameters)
+            arc_weights[value] = 1
+        elif len(action_parameter_names) == 1:
+            arc_weights[objects[action_parameter_names[0]]] = 1
+        else:
+            arc_weights[dotLiteral] = 1
+
+        return place, arc_weights
+
+    # todo: Breaks if multiple arcs between same place and transition.
     for action in problem.actions:
         transition = pn.add_transition(Transition(action.name))
         transitions[action.name] = transition
 
         for pred, type in action_atom_types(action):
-            place = places[pred_to_place_regex.search(pred).group()]
-            action_parameter_names = pred_parameter_regex.findall(pred)
-
-            arc_weights: dict[Value, int] = dict()
-            if len(action_parameter_names) > 1:
-                action_parameters = [variables[param_name] for param_name in action_parameter_names]
-                value = ProductColorValue(param_colors[len(action_parameter_names)], action_parameters)
-                arc_weights[value] = 1
-
-            elif len(action_parameter_names) == 1:
-                arc_weights[variables[action_parameter_names[0]]] = 1
-
-            else:
-                arc_weights[dotLiteral] = 1
+            place, arc_weights = pred_to_place_and_variables(str(pred))
 
             if type == "requires":
                 pn.add_arc(ArcPlaceToTransition(place, transition, arc_weights))
@@ -124,21 +145,24 @@ def translate(name: str, problem: Problem) -> tuple[PetriNet, Marking]:
     # Markings
     # Initial
     initialMarking = Marking()
-    initialMarking.set(places["clear"], objects["b1"], 1)
-    initialMarking.set(places["clear"], objects["b2"], 1)
-    initialMarking.set(places["clear"], objects["b5"], 1)
-    initialMarking.set(places["on-table"], objects["b3"], 1)
-    initialMarking.set(places["on-table"], objects["b4"], 1)
-    initialMarking.set(places["on-table"], objects["b5"], 1)
-    initialMarking.set(places["arm-empty"], dotLiteral, 1)
-    initialMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b1"], objects["b4"]]), 1)
-    initialMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b2"], objects["b3"]]), 1)
+    for pred, truth in problem.initial_values.items():
+        if str(truth) != "true":
+            continue
+
+        place, arc_weights = pred_to_place_and_literals(str(pred))
+        for val, weight in arc_weights.items():
+            initialMarking.set(place, val, weight)
 
     # Goal
     goalMarking = Marking()
-    goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b1"], objects["b4"]]), 1)
-    goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b2"], objects["b1"]]), 1)
-    goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b4"], objects["b5"]]), 1)
-    goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b5"], objects["b3"]]), 1)
+    for pred in problem.goals[0].args:
+        place, arc_weights = pred_to_place_and_literals(str(pred))
+        for var, weight in arc_weights.items():
+            goalMarking.set(place, var, weight)
+
+    # goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b1"], objects["b4"]]), 1)
+    # goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b2"], objects["b1"]]), 1)
+    # goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b4"], objects["b5"]]), 1)
+    # goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b5"], objects["b3"]]), 1)
 
     return pn, initialMarking
