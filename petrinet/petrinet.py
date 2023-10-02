@@ -1,3 +1,4 @@
+from petrinet.marking import Marking
 from petrinet.place import Place
 from petrinet.transition import Transition
 from petrinet.arc import *
@@ -56,3 +57,38 @@ class PetriNet:
     def add_variable(self, variable: Variable) -> Variable:
         self.variables.append(variable)
         return variable
+
+    def generate_pnml(self, marking: Marking) -> str:
+        newline = "\n"
+
+        color_decls = newline.join([color.generate_pnml() for color in self.colors])
+
+        var_decls = newline.join([var.generate_decl_pnml() for var in self.variables])
+
+        places = newline.join([place.generate_pnml(marking, position=(100+150*i, 100)) for i, place in enumerate(self.places)])
+
+        transitions = newline.join([transition.generate_pnml(position=(175+150*i, 300)) for i, transition in enumerate(self.transitions)])
+
+        arcs = newline.join([arc.generate_pnml() for arc in self.arcs])
+
+        return f'''\
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+    <net id="ComposedModel" type="http://www.pnml.org/version-2009/grammar/ptnet">
+        <name><text>ComposedModel</text></name>
+        <declaration>
+            <structure>
+                <declarations>
+                {color_decls}
+                {var_decls}
+                </declarations>
+            </structure>
+        </declaration>
+        <page id="page0">
+            {places}
+            {transitions}
+            {arcs}
+        </page>
+    </net>
+</pnml>
+'''
