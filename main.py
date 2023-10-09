@@ -19,8 +19,5 @@ def translate_problem(
     with open(pnml_output_path, "w") as f:
         print(pnml, file=f)
 
-    # todo: Output query
     with open(pnml_query_path, "w") as f:
-        print("Output query to be", file=f)
-
-
+        print(planning_to_petri.generate_goal_query_xml(), file=f)

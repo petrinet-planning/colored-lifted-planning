@@ -160,9 +160,36 @@ def translate(problem: Problem) -> tuple[PetriNet, Marking]:
         for var, weight in arc_weights.items():
             goalMarking.set(place, var, weight)
 
+    # Goal Transition
+    goal = pn.add_transition(Transition("goal"))
+    for place, values in goalMarking.values.items():
+        pn.add_arc(ArcPlaceToTransition(place, goal, values))
+
     # goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b1"], objects["b4"]]), 1)
     # goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b2"], objects["b1"]]), 1)
     # goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b4"], objects["b5"]]), 1)
     # goalMarking.set(places["on"], ProductColorLiteral(param_colors[2], [objects["b5"], objects["b3"]]), 1)
 
     return pn, initialMarking
+
+
+def generate_goal_query_xml():
+    return """\
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<property-set xmlns="http://tapaal.net/">
+  
+  <property>
+    <id>Goal Transition Reachable</id>
+    <description>Goal Transition Reachable</description>
+    <formula>
+      <exists-path>
+        <finally>
+          <is-fireable>
+            <transition>ComposedModel_goal</transition>
+          </is-fireable>
+        </finally>
+      </exists-path>
+    </formula>
+  </property>
+</property-set>
+"""
