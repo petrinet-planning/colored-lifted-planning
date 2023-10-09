@@ -2,18 +2,7 @@ import re
 
 from unified_planning.model import Problem, Action, OperatorKind, FNode
 
-import petrinet
-
-from petrinet.arc import ArcPlaceToTransition, ArcTransitionToPlace
-from petrinet.color import *
-from petrinet.literal import EnumerationColorLiteral, DotColorLiteral, ProductColorLiteral
-from petrinet.marking import Marking
-from petrinet.petrinet import PetriNet
-from petrinet.place import Place
-from petrinet.value import ProductColorValue
-from petrinet.variable import *
-from petrinet.transition import *
-from petrinet.weighted_values import WeightedValues
+from petrinet import *
 
 
 def translate(problem: Problem) -> tuple[PetriNet, Marking]:
