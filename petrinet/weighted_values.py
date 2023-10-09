@@ -1,5 +1,5 @@
-from petrinet.color import Color
-from petrinet.value import Value
+from .color import Color
+from .value import Value
 
 
 class WeightedValues:

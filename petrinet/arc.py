@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import Union
 
-from petrinet.value import Value
-from petrinet.weighted_values import WeightedValues
+from .value import Value
+from .weighted_values import WeightedValues
 
 
 class Arc:
@@ -11,11 +11,17 @@ class Arc:
     transition: "Transition"
     values: WeightedValues
 
-    def __init__(self, name: str, place: "Place", transition: "Transition", values: dict[Value, int] = None) -> None:
+    def __init__(self, name: str, place: "Place", transition: "Transition", values: Union[dict[Value, int], WeightedValues] = None) -> None:
         self.name = name
         self.place = place
         self.transition = transition
-        self.values = WeightedValues(place.color, values) if values is not None else WeightedValues(place.color)
+
+        if isinstance(values, WeightedValues):
+            if values.color != self.place.color:
+                raise Exception("Value color must match place color")
+            self.values = values
+        else:
+            self.values = WeightedValues(place.color, values) if values is not None else WeightedValues(place.color)
 
     def set_weight(self, value: "Value", weight: int):
         self.values.set(value, weight)
@@ -39,7 +45,7 @@ class Arc:
 
 
 class ArcPlaceToTransition(Arc):
-    def __init__(self, place: "Place", transition: "Transition", values: dict[Value, int]) -> None:
+    def __init__(self, place: "Place", transition: "Transition", values: Union[dict[Value, int], WeightedValues] = None) -> None:
         super().__init__(f'{place.name}_to_{transition.name}', place, transition, values)
 
     def get_source(self) -> Union["Place", "Transition"]:
@@ -66,7 +72,7 @@ class ArcPlaceToTransition(Arc):
 
 
 class ArcTransitionToPlace(Arc):
-    def __init__(self, transition: "Transition", place: "Place", values: dict[Value, int]) -> None:
+    def __init__(self, transition: "Transition", place: "Place", values: Union[dict[Value, int], WeightedValues] = None) -> None:
         super().__init__(f'{transition.name}_to_{place.name}', place, transition, values)
 
     def get_source(self) -> Union["Place", "Transition"]:

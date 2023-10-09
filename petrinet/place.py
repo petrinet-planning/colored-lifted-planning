@@ -1,4 +1,4 @@
-from petrinet.color import Color
+from .color import Color
 
 
 class Place:

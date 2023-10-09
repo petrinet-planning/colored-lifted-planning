@@ -1,6 +1,6 @@
-from petrinet.literal import Literal
-from petrinet.place import Place
-from petrinet.weighted_values import WeightedValues
+from .literal import Literal
+from .place import Place
+from .weighted_values import WeightedValues
 
 
 class Marking:

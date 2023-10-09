@@ -1,11 +1,11 @@
 from typing import Union
 
-from petrinet.marking import Marking
-from petrinet.place import Place
-from petrinet.transition import Transition
-from petrinet.arc import *
-from petrinet.color import *
-from petrinet.variable import *
+from .marking import Marking
+from .place import Place
+from .transition import Transition
+from .arc import *
+from .color import *
+from .variable import *
 
 
 class PetriNet:

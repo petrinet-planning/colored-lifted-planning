@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-#from petrinet.literal import EnumerationColorLiteral
-
-
 class Color:
     name: str
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Union
 
-from petrinet.color import Color, ProductColor
+from .color import Color, ProductColor
 
 
 class Value:

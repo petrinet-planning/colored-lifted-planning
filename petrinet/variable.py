@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from petrinet.value import Value
+from .value import Value
 
 
 class Variable(Value):
