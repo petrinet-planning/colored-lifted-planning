@@ -22,3 +22,10 @@ class WeightedValues:
 
     def items(self) -> list[tuple[Value, int]]:
         return self.values.items()
+
+    def absorb(self, other: "WeightedValues") -> None:
+        for value, weight in other.items():
+            if self.values.get(value, None) is not None:
+                raise Exception("Unclear whether to overwrite or add weight when merging values.")
+
+            self.values[value] = weight

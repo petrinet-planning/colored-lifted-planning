@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Union
 
 from petrinet.value import Value
 from petrinet.weighted_values import WeightedValues
@@ -19,6 +20,20 @@ class Arc:
     def set_weight(self, value: "Value", weight: int):
         self.values.set(value, weight)
 
+    def get_source(self) -> Union["Place", "Transition"]:
+        raise Exception("Not implemented on base class")
+
+    def get_destination(self) -> Union["Place", "Transition"]:
+        raise Exception("Not implemented on base class")
+
+    def absorb(self, other: Arc):
+        if self.get_source() != other.get_source():
+            raise Exception("Arc sources must match for merge")
+        if self.get_destination() != other.get_destination():
+            raise Exception("Arc destinations must match for merge")
+
+        self.values.absorb(other.values)
+
     def generate_pnml(self):
         raise Exception("Not Implemented")
 
@@ -26,6 +41,12 @@ class Arc:
 class ArcPlaceToTransition(Arc):
     def __init__(self, place: "Place", transition: "Transition", values: dict[Value, int]) -> None:
         super().__init__(f'{place.name}_to_{transition.name}', place, transition, values)
+
+    def get_source(self) -> Union["Place", "Transition"]:
+        return self.place
+
+    def get_destination(self) -> Union["Place", "Transition"]:
+        return self.transition
 
     def generate_pnml(self):
         newline = "\n"
@@ -47,6 +68,12 @@ class ArcPlaceToTransition(Arc):
 class ArcTransitionToPlace(Arc):
     def __init__(self, transition: "Transition", place: "Place", values: dict[Value, int]) -> None:
         super().__init__(f'{transition.name}_to_{place.name}', place, transition, values)
+
+    def get_source(self) -> Union["Place", "Transition"]:
+        return self.transition
+
+    def get_destination(self) -> Union["Place", "Transition"]:
+        return self.place
 
     def generate_pnml(self):
         newline = "\n"

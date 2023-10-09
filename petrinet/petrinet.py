@@ -1,3 +1,5 @@
+from typing import Union
+
 from petrinet.marking import Marking
 from petrinet.place import Place
 from petrinet.transition import Transition
@@ -12,6 +14,7 @@ class PetriNet:
     places: list[Place]
     transitions: list[Transition]
     arcs: list[Arc]
+    arc_dict: dict[tuple[Union[Place, Transition], Union[Place, Transition]], Arc]
     colors: list[Color]
     variables: list[Variable]
 
@@ -28,7 +31,11 @@ class PetriNet:
         self.name = name
         self.places = places if places is not None else []
         self.transitions = transitions if transitions is not None else []
-        self.arcs = arcs if arcs is not None else []
+        self.arcs = []
+        self.arc_dict = dict()
+        if arcs is not None:
+            for arc in arcs:
+                self.add_arc(arc)
         self.colors = colors if colors is not None else []
         self.variables = variables if variables is not None else []
 
@@ -47,8 +54,19 @@ class PetriNet:
         if not self.transitions.__contains__(arc.transition):
             raise "Attempted to add an arc containing a transition not found in the petri net"
 
-        self.arcs.append(arc)
-        return arc
+        src = arc.get_source()
+        dest = arc.get_destination()
+
+        existing_arc = self.arc_dict.get((src, dest), None)
+
+        if existing_arc is not None:
+            existing_arc.absorb(arc)
+            return existing_arc
+
+        else:
+            self.arcs.append(arc)
+            self.arc_dict[src, dest] = arc
+            return arc
 
     def add_color(self, color: Color) -> Color:
         self.colors.append(color)
