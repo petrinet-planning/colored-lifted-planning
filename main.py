@@ -1,7 +1,7 @@
 from unified_planning.io import PDDLReader
 from unified_planning.model import Problem
 
-from translation import translate, generate_goal_query_xml
+from .translation import translate, generate_goal_query_xml
 
 
 def translate_problem(
