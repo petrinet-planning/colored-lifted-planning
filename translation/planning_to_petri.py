@@ -40,7 +40,6 @@ def translate(problem: Problem) -> tuple[PetriNet, Marking]:
     transitions: dict[str, Transition] = dict()
 
     def action_atom_types(action: Action) -> list[tuple[str, str]]:
-        print(action)
         in_pre = 0b100
         in_del = 0b010
         in_add = 0b001
