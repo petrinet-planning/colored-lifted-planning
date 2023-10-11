@@ -175,7 +175,7 @@ def generate_goal_query_xml():
       <exists-path>
         <finally>
           <is-fireable>
-            <transition>ComposedModel_goal</transition>
+            <transition>goal</transition>
           </is-fireable>
         </finally>
       </exists-path>
