@@ -2,7 +2,7 @@ import re
 
 from unified_planning.model import Problem, Action, OperatorKind, FNode
 
-from ..petrinet import *
+from petrinet import *
 
 
 def translate(problem: Problem) -> tuple[PetriNet, Marking]:

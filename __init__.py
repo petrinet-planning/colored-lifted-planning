@@ -1,2 +1,2 @@
 
-from .main import translate_problem
+from .translation import translate_problem

@@ -1,23 +1,24 @@
-from unified_planning.io import PDDLReader
-from unified_planning.model import Problem
+import argparse
 
-from .translation import translate, generate_goal_query_xml
+from translation import translate_problem
 
 
-def translate_problem(
-        pddl_domain_path: str,
-        pddl_problem_path: str = None,
-        pnml_output_path: str = "output.pnml",
-        pnml_query_path: str = "query.xml"
-):
-    reader = PDDLReader()
-    pddl_problem: Problem = reader.parse_problem(pddl_domain_path, pddl_problem_path)
+def main():
+    parser = argparse.ArgumentParser(description='Process some integers.')
 
-    generated_pn, generated_initial_marking = translate(pddl_problem)
+    parser.add_argument("pddl_domain_path", metavar="pddl_domain_path", type=str, nargs=1 )
+    parser.add_argument("pddl_problem_path", metavar="pddl_problem_path", type=str, nargs=1 )
+    parser.add_argument("pnml_output_path", metavar="pnml_output_path", type=str, nargs=1 )
+    parser.add_argument("pnml_query_path", metavar="pnml_query_path", type=str, nargs=1 )
 
-    pnml = generated_pn.generate_pnml(generated_initial_marking)
-    with open(pnml_output_path, "w") as f:
-        print(pnml, file=f)
+    args = parser.parse_args()
 
-    with open(pnml_query_path, "w") as f:
-        print(generate_goal_query_xml(), file=f)
+    translate_problem(
+        args.pddl_domain_path[0],
+        args.pddl_problem_path[0],
+        args.pnml_output_path[0],
+        args.pnml_query_path[0]
+    )
+
+if __name__ == "__main__":
+    main()
