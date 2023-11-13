@@ -2,6 +2,7 @@ from unified_planning.io import PDDLReader
 from unified_planning.model import Problem
 
 from translation import translate, generate_goal_query_xml
+from translation.planning_to_petri_builder import PlanningToPetriBuilder, generate_goal_query_xml
 
 
 def translate_problem(
@@ -13,7 +14,10 @@ def translate_problem(
     reader = PDDLReader()
     pddl_problem: Problem = reader.parse_problem(pddl_domain_path, pddl_problem_path)
 
-    generated_pn, generated_initial_marking = translate(pddl_problem)
+    builder = PlanningToPetriBuilder(pddl_problem)
+
+    generated_pn = builder.pn
+    generated_initial_marking = builder.generate_initial_marking()
 
     pnml = generated_pn.generate_pnml(generated_initial_marking)
     with open(pnml_output_path, "w") as f:

@@ -7,5 +7,5 @@ from .petrinet import PetriNet
 from .place import Place
 from .transition import Transition
 from .value import Value, ProductColorValue
-from .variable import Variable
+from .variable import Variable, EnumerationVariable
 from .weighted_values import WeightedValues

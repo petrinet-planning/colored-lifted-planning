@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .value import Value
+from .value import Value, EnumerationColorValue
 
 
 class Variable(Value):
@@ -20,3 +20,14 @@ class Variable(Value):
                 </numberof>
             </subterm>
         """
+
+
+class EnumerationVariable(Variable, EnumerationColorValue):
+    def __init__(self, name: str, color: "EnumerationColor") -> None:
+        super().__init__(name, color)
+
+    def generate_pnml_subterm(self):
+        return f'<subterm><variable refvariable="Var{self.strValue}"/></subterm>'
+    
+    def __repr__(self):
+        return f"{self.color.name}[{self.strValue}]"

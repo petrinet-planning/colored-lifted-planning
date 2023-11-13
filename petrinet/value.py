@@ -1,6 +1,4 @@
 from __future__ import annotations
-from typing import Union
-
 from .color import Color, ProductColor
 
 
@@ -15,11 +13,17 @@ class Value:
     def generate_pnml(self, weight: int):
         raise Exception("Not Implemented")
 
+    def __repr__(self):
+        return f"{self.color.name}[{self.strValue}]"
+
+class EnumerationColorValue(Value):
+    def generate_pnml_subterm(self):
+        pass
 
 class ProductColorValue(Value):
-    values: list[Union["EnumerationColorLiteral", "Variable"]]
+    values: list["EnumerationColorValue"]
 
-    def __init__(self, color: "Color", values: list[Union["EnumerationColorLiteral", "Variable"]]) -> None:
+    def __init__(self, color: "Color", values: list[EnumerationColorValue]) -> None:
         if not isinstance(color, ProductColor):
             raise Exception("Product must be of product type")
 
@@ -31,6 +35,12 @@ class ProductColorValue(Value):
     def generate_pnml(self, weight: int):
         newline = "\n"
 
+        # subterms = [
+        #     f'<subterm><variable refvariable="Var{val.strValue}"/></subterm>' if type(val) is Variable else
+        #     f'<subterm><useroperator declaration="{val.strValue}" /></subterm>'
+        #     for val in self.values]
+
+
         return f'''\
         <subterm>
             <numberof>
@@ -39,7 +49,7 @@ class ProductColorValue(Value):
                 </subterm>
                 <subterm>
                     <tuple>
-                        {newline.join([f'<subterm><variable refvariable="Var{v.strValue}"/></subterm>' for v in self.values])}
+                        {newline.join([val.generate_pnml_subterm() for val in self.values])}
                     </tuple>
                 </subterm>
             </numberof>

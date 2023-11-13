@@ -10,6 +10,9 @@ class Color:
     def generate_pnml(self) -> str:
         raise "Not Implemented"
 
+    def __repr__(self):
+        return self.name
+
 
 class DotColor(Color):
     def __init__(self):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .value import Value
+from .value import Value, EnumerationColorValue
 
 
 class Literal(Value):
@@ -23,9 +23,12 @@ class DotColorLiteral(Literal):
         super().__init__("dot", color)
 
 
-class EnumerationColorLiteral(Literal):
+class EnumerationColorLiteral(Literal, EnumerationColorValue):
     def __init__(self, color: "EnumerationColor", value: str) -> None:
         super().__init__(value, color)
+
+    def generate_pnml_subterm(self):
+        return f'<subterm><useroperator declaration="{self.strValue}" /></subterm>'
 
 
 class ProductColorLiteral(Literal):
