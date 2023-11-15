@@ -1,7 +1,5 @@
 from unified_planning.io import PDDLReader
 from unified_planning.model import Problem
-
-from translation import translate, generate_goal_query_xml
 from translation.planning_to_petri_builder import PlanningToPetriBuilder, generate_goal_query_xml
 
 
