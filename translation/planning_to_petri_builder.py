@@ -146,22 +146,24 @@ class PlanningToPetriBuilder(object):
                 weighted_values = dict([(self.get_value(pred, variables), 1)])
 
 
-                match connection_type:
-                    case ArcDirections.NONE:
-                        raise "None-connection - Should never have left the get_arc_directions function"
-                    
-                    case ArcDirections.PLACE_TO_TRANSITION:
-                        self.pn.add_arc(ArcPlaceToTransition(place, transition, weighted_values))
+                if connection_type == ArcDirections.NONE:
+                    raise "None-connection - Should never have left the get_arc_directions function"
+                
+                elif connection_type == ArcDirections.PLACE_TO_TRANSITION:
+                    self.pn.add_arc(ArcPlaceToTransition(place, transition, weighted_values))
 
-                    case ArcDirections.TRANSITION_TO_PLACE:
-                        self.pn.add_arc(ArcTransitionToPlace(transition, place, weighted_values))
+                elif connection_type == ArcDirections.TRANSITION_TO_PLACE:
+                    self.pn.add_arc(ArcTransitionToPlace(transition, place, weighted_values))
 
-                    case ArcDirections.BOTH:
-                        self.pn.add_arc(ArcPlaceToTransition(place, transition, weighted_values))
-                        self.pn.add_arc(ArcTransitionToPlace(transition, place, weighted_values))
+                elif connection_type == ArcDirections.BOTH:
+                    self.pn.add_arc(ArcPlaceToTransition(place, transition, weighted_values))
+                    self.pn.add_arc(ArcTransitionToPlace(transition, place, weighted_values))
 
-                    case ArcDirections.UNHANDLED:
-                        raise "Unhandled connection type"
+                elif connection_type == ArcDirections.UNHANDLED:
+                    raise "Unhandled connection type"
+            
+                else:
+                    raise "Unhandled case"
                     
 
     def get_arc_directions(self, action) -> dict[FNode, ArcDirections]:
