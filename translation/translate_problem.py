@@ -14,7 +14,7 @@ def translate_problem(
 
     builder = PlanningToPetriBuilder(pddl_problem)
 
-    generated_pn = builder.pn
+    generated_pn = builder.generate_petrinet()
     generated_initial_marking = builder.generate_initial_marking()
 
     pnml = generated_pn.generate_pnml(generated_initial_marking)

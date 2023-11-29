@@ -26,6 +26,9 @@ class PlanningToPetriBuilder(object):
 
     def __init__(self, problem: Problem):
         self.problem = problem
+
+
+    def generate_petrinet(self) -> PetriNet:
         self.pn = PetriNet(problem.name)
 
         self.make_base_colors()
@@ -33,6 +36,9 @@ class PlanningToPetriBuilder(object):
         self.make_transitions()
         self.connect_actions()
         self.make_goal_transition()
+
+        return self.pn
+
 
     def make_base_colors(self):
         
@@ -135,7 +141,7 @@ class PlanningToPetriBuilder(object):
             transition = self.transitions[action.name]
             variables = self.get_variables(action)
 
-            for (pred, connection_type) in self.get_arc_directions(action).items():
+            for (pred, connection_type) in get_arc_directions(action).items():
 
                 place = self.get_place(pred)
 
@@ -165,48 +171,6 @@ class PlanningToPetriBuilder(object):
                 else:
                     raise "Unhandled case"
                     
-
-    def get_arc_directions(self, action) -> dict[FNode, ArcDirections]:
-    
-        in_pre = 0b100
-        in_del = 0b010
-        in_add = 0b001
-        occurrences: dict[FNode, int] = {}
-
-        if action.preconditions[0].node_type is OperatorKind.FLUENT_EXP:
-            pred = action.preconditions[0]
-            occurrences[pred] = occurrences.get(pred, 0) | in_pre
-        elif action.preconditions[0].node_type is OperatorKind.AND:  # Only one precondition
-            for pred in action.preconditions[0].args:
-                occurrences[pred] = occurrences.get(pred, 0) | in_pre
-        else:
-            raise "Unhandled pred type"
-
-        for eff in action.effects:
-            if str(eff.value) == "true":
-                occurrences[eff.fluent] = occurrences.get(eff.fluent, 0) | in_add
-            else:
-                occurrences[eff.fluent] = occurrences.get(eff.fluent, 0) | in_del
-
-        occurrence_types: [int, PlanningToPetriBuilder.arc_directions] = dict()
-        occurrence_types[in_pre | in_del | in_add] = ArcDirections.BOTH # "requires"
-        occurrence_types[in_pre | in_del |      0] = ArcDirections.PLACE_TO_TRANSITION # "deletes"
-        occurrence_types[in_pre |      0 | in_add] = ArcDirections.BOTH # "requires"
-        occurrence_types[in_pre |      0 |      0] = ArcDirections.BOTH # "requires"
-        occurrence_types[     0 | in_del | in_add] = ArcDirections.TRANSITION_TO_PLACE # "adds"
-        occurrence_types[     0 | in_del |      0] = ArcDirections.UNHANDLED # "UNSUPPORTED"  # todo: Occurs in snake benchmark
-        occurrence_types[     0 |      0 | in_add] = ArcDirections.TRANSITION_TO_PLACE # "adds"
-        occurrence_types[     0 |      0 |      0] = ArcDirections.NONE # "not in"
-
-        # Check validity
-        for pred, occ in occurrences.items():
-            if occurrence_types[occ] == ArcDirections.UNHANDLED: #"UNSUPPORTED":
-                raise Exception("Unsupported predicate type - del without pre")
-            if occurrence_types[occ] == ArcDirections.NONE: #"not in":
-                raise Exception("Should not happen - pred exists, but doesn't")
-
-        return dict([(pred, occurrence_types[type_id]) for pred, type_id in occurrences.items()])
-
 
     def get_place(self, pred: FNode):
         place = self.places[pred.fluent().name]
@@ -247,6 +211,50 @@ class PlanningToPetriBuilder(object):
         goal = self.pn.add_transition(Transition("goal"))
         for place, values in goalMarking.values.items():
             self.pn.add_arc(ArcPlaceToTransition(place, goal, values))
+
+
+
+def get_arc_directions(action) -> dict[FNode, ArcDirections]:
+
+    in_pre = 0b100
+    in_del = 0b010
+    in_add = 0b001
+    occurrences: dict[FNode, int] = {}
+
+    if action.preconditions[0].node_type is OperatorKind.FLUENT_EXP:
+        pred = action.preconditions[0]
+        occurrences[pred] = occurrences.get(pred, 0) | in_pre
+    elif action.preconditions[0].node_type is OperatorKind.AND:  # Only one precondition
+        for pred in action.preconditions[0].args:
+            occurrences[pred] = occurrences.get(pred, 0) | in_pre
+    else:
+        raise "Unhandled pred type"
+
+    for eff in action.effects:
+        if str(eff.value) == "true":
+            occurrences[eff.fluent] = occurrences.get(eff.fluent, 0) | in_add
+        else:
+            occurrences[eff.fluent] = occurrences.get(eff.fluent, 0) | in_del
+
+    occurrence_types: [int, PlanningToPetriBuilder.arc_directions] = dict()
+    occurrence_types[in_pre | in_del | in_add] = ArcDirections.BOTH # "requires"
+    occurrence_types[in_pre | in_del |      0] = ArcDirections.PLACE_TO_TRANSITION # "deletes"
+    occurrence_types[in_pre |      0 | in_add] = ArcDirections.BOTH # "requires"
+    occurrence_types[in_pre |      0 |      0] = ArcDirections.BOTH # "requires"
+    occurrence_types[     0 | in_del | in_add] = ArcDirections.TRANSITION_TO_PLACE # "adds"
+    occurrence_types[     0 | in_del |      0] = ArcDirections.UNHANDLED # "UNSUPPORTED"  # todo: Occurs in snake benchmark
+    occurrence_types[     0 |      0 | in_add] = ArcDirections.TRANSITION_TO_PLACE # "adds"
+    occurrence_types[     0 |      0 |      0] = ArcDirections.NONE # "not in"
+
+    # Check validity
+    for pred, occ in occurrences.items():
+        if occurrence_types[occ] == ArcDirections.UNHANDLED: #"UNSUPPORTED":
+            raise Exception("Unsupported predicate type - del without pre")
+        if occurrence_types[occ] == ArcDirections.NONE: #"not in":
+            raise Exception("Should not happen - pred exists, but doesn't")
+
+    return dict([(pred, occurrence_types[type_id]) for pred, type_id in occurrences.items()])
+
 
 
 def generate_goal_query_xml():
