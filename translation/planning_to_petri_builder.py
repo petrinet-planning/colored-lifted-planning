@@ -29,7 +29,7 @@ class PlanningToPetriBuilder(object):
 
 
     def generate_petrinet(self) -> PetriNet:
-        self.pn = PetriNet(problem.name)
+        self.pn = PetriNet(self.problem.name)
 
         self.make_base_colors()
         self.make_places()
