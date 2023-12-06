@@ -60,7 +60,7 @@ class ArcPlaceToTransition(Arc):
         return f'''\
             <arc id="{self.name}" source="{self.place.name}" target="{self.transition.name}" type="normal">
                 <hlinscription>
-                    <text>({" + ".join([f"{weight}'{val.strValue}" for val,weight in self.values.items()])})</text>
+                    <text>({" + ".join([f"{weight}'{val.display_name}" for val,weight in self.values.items()])})</text>
                     <structure>
                         <add>
                             {newline.join([val.generate_pnml(weight) for (val, weight) in self.values.items()])}
@@ -87,7 +87,7 @@ class ArcTransitionToPlace(Arc):
         return f'''\
             <arc id="{self.name}" source="{self.transition.name}" target="{self.place.name}" type="normal">
                 <hlinscription>
-                    <text>({" + ".join([f"{weight}'{val.strValue}" for val,weight in self.values.items()])})</text>
+                    <text>({" + ".join([f"{weight}'{val.display_name}" for val,weight in self.values.items()])})</text>
                     <structure>
                         <add>
                             {newline.join([val.generate_pnml(weight) for (val, weight) in self.values.items()])}

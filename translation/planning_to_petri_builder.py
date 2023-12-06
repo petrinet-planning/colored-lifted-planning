@@ -70,7 +70,7 @@ class PlanningToPetriBuilder(object):
     variables: dict[tuple[str, str], EnumerationVariable] = dict()
     def get_or_make_variable(self, name: str, type_name: str):
         if (name, type_name) not in self.variables:
-            self.variables[(name, type_name)] = self.pn.add_variable(EnumerationVariable(f"{name}_{type_name}", self.type_colors[type_name]))
+            self.variables[(name, type_name)] = self.pn.add_variable(EnumerationVariable(f"Var{name}_{type_name}", f"{name}:{type_name}", self.type_colors[type_name]))
             
         return self.variables[(name, type_name)]
 

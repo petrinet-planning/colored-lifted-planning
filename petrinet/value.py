@@ -5,9 +5,11 @@ from .color import Color, ProductColor
 class Value:
     color: "Color"
     strValue: str
+    displayName: str
 
     def __init__(self, strValue: str, color: "Color"):
         self.strValue = strValue
+        self.display_name = strValue
         self.color = color
 
     def generate_pnml(self, weight: int):
