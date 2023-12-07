@@ -5,7 +5,7 @@ from .color import Color, ProductColor
 class Value:
     color: "Color"
     strValue: str
-    displayName: str
+    display_name: str
 
     def __init__(self, strValue: str, color: "Color"):
         self.strValue = strValue
@@ -17,6 +17,19 @@ class Value:
 
     def __repr__(self):
         return f"{self.color.name}[{self.strValue}]"
+    
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, Value):
+            return False
+        
+        return (
+            self.color.name == __value.color.name and
+            self.strValue == __value.strValue and
+            self.display_name == __value.display_name
+        )
+    
+    def __hash__(self) -> int:
+        return self.strValue.__hash__()
 
 class EnumerationColorValue(Value):
     def generate_pnml_subterm(self):

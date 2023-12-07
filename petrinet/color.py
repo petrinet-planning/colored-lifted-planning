@@ -12,6 +12,12 @@ class Color:
 
     def __repr__(self):
         return self.name
+    
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, Color):
+            return False
+        
+        return self.name == __value.name
 
 
 class DotColor(Color):
@@ -41,6 +47,12 @@ class EnumerationColor(Color):
                     { newline.join([f'<feconstant id="{v.strValue}" name="{self.name}"/>' for v in self.values]) }
                 </cyclicenumeration>
             </namedsort>'''
+    
+    def __eq__(self, __value: object) -> bool:
+        if not Color.__eq__(self, __value):
+            return False
+        
+        return self.values == __value.values
 
 
 class ProductColor(Color):
@@ -56,3 +68,10 @@ class ProductColor(Color):
             <namedsort id="{self.name}" name="{self.name}"><productsort>
                 {newline.join([f'<usersort declaration="{t.name}"/>' for t in self.types])}
             </productsort></namedsort>'''
+
+    def __eq__(self, __value: object) -> bool:
+        if not Color.__eq__(self, __value):
+            return False
+        
+        return self.types == __value.types
+    
