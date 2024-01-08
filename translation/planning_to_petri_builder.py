@@ -4,6 +4,7 @@ from enum import Enum
 from unified_planning.model import Problem, Action, OperatorKind, FNode, types, InstantaneousAction
 
 from petrinet import *
+from petrinet.guard import *
 
 
 class ArcDirections(Enum):
@@ -142,19 +143,30 @@ class PlanningToPetriBuilder(object):
             variables = self.get_variables(action)
 
             for (pred, connection_type) in get_arc_directions(action).items():
-
-                place = self.get_place(pred)
+                
+                #To avoid it trying to create a place for non-predicate preconditions
+                if pred.node_type is not (OperatorKind.NOT or OperatorKind.EQUALS):
+                    place = self.get_place(pred)
+                    weighted_values = dict([(self.get_value(pred, variables), 1)])
 
                 # All 1 in planning
                 #weighted_values: dict(EnumerationVariable, Literal[1]) = dict([(variables[arg.parameter().name], 1) for arg in pred.args])
                 # weighted_values = dict([(variables[arg.parameter().name], 1) for arg in pred.args])
 
-                weighted_values = dict([(self.get_value(pred, variables), 1)])
-
 
                 if connection_type == ArcDirections.NONE:
                     raise "None-connection - Should never have left the get_arc_directions function"
                 
+                    # Add a guard to the transition !(x = y)
+                elif pred.node_type is OperatorKind.NOT and pred.args[0].node_type is OperatorKind.EQUALS:
+                    transition.add_guard(Guard(variables, notEqual=True))
+                    pass
+                    
+                    # Add a guard to the transition x = y
+                elif pred.node_type is OperatorKind.EQUALS:
+                    transition.add_guard(Guard(variables))
+                    pass
+                    
                 elif connection_type == ArcDirections.PLACE_TO_TRANSITION:
                     self.pn.add_arc(ArcPlaceToTransition(place, transition, weighted_values))
 

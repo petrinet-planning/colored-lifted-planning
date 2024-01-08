@@ -3,6 +3,7 @@ from typing import Union
 from .marking import Marking
 from .place import Place
 from .transition import Transition
+from .guard import Guard
 from .arc import *
 from .color import *
 from .variable import *
