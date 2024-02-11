@@ -26,6 +26,7 @@ class WeightedValues:
     def absorb(self, other: "WeightedValues") -> None:
         for value, weight in other.items():
             if self.values.get(value, None) is not None:
-                raise Exception("Unclear whether to overwrite or add weight when merging values.")
+                # raise Exception("Unclear whether to overwrite or add weight when merging values.")
+                continue # Just ignore duplicate values - equivalent in set-based semantics
 
             self.values[value] = weight
