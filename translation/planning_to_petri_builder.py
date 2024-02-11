@@ -213,12 +213,21 @@ class PlanningToPetriBuilder(object):
 
     def make_goal_transition(self):
         goalMarking = Marking()
-        for pred in self.problem.goals[0].args:
 
+        if len(self.problem.goals) == 1:
+            pred = self.problem.goals[0]
             place = self.get_place(pred)
             value = self.get_value_literal(pred)
 
             goalMarking.set(place, value, 1)
+
+        else:
+            for pred in self.problem.goals[0].args:
+
+                place = self.get_place(pred)
+                value = self.get_value_literal(pred)
+
+                goalMarking.set(place, value, 1)
 
         goal = self.pn.add_transition(Transition("goal"))
         for place, values in goalMarking.values.items():
