@@ -211,23 +211,21 @@ class PlanningToPetriBuilder(object):
         return initialMarking
 
 
-    def make_goal_transition(self):
+   def make_goal_transition(self):
         goalMarking = Marking()
 
-        if len(self.problem.goals) == 1:
+        if (self.problem.goals[0].node_type is OperatorKind.AND):
+            for pred in self.problem.goals[0].args:
+                place = self.get_place(pred)
+                value = self.get_value_literal(pred)
+
+                goalMarking.set(place, value, 1)
+        else:
             pred = self.problem.goals[0]
             place = self.get_place(pred)
             value = self.get_value_literal(pred)
 
             goalMarking.set(place, value, 1)
-
-        else:
-            for pred in self.problem.goals[0].args:
-
-                place = self.get_place(pred)
-                value = self.get_value_literal(pred)
-
-                goalMarking.set(place, value, 1)
 
         goal = self.pn.add_transition(Transition("goal"))
         for place, values in goalMarking.values.items():
