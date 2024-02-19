@@ -1,20 +1,15 @@
-from .guard import Guard
+from .guardex import GuardExpression
 
 class Transition:
     name: str
     id: str
-    guard: Guard
+    guardex: GuardExpression = None
 
     def __init__(self, name: str) -> None:
         self.name = name
-        self.guard = None
-
-    def add_guard(self, guard: Guard) -> Guard:
-        self.guard = guard
-        return guard
 
     def generate_pnml(self, position: tuple[int, int]) -> str:
-        guard_pnml = self.guard.generate_pnml() if self.guard else ""
+        guard_pnml = self.guardex.generate_pnml() if self.guardex else ""
         return f'''\
             <transition id="{self.name}">
                 <name><graphics><offset x="0" y="0"/></graphics><text>{self.name}</text></name>
