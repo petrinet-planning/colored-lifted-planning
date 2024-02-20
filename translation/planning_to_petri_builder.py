@@ -211,7 +211,7 @@ class PlanningToPetriBuilder(object):
         return initialMarking
 
 
-   def make_goal_transition(self):
+    def make_goal_transition(self):
         goalMarking = Marking()
 
         if (self.problem.goals[0].node_type is OperatorKind.AND):
