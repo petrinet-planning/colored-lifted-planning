@@ -39,20 +39,11 @@ def test_validity(pddl_domain_path: str, pddl_problem_path: str) -> ValidityStat
 def test_problem_validity(problem: Problem) -> ValidityStatus:
     status = ValidityStatus()
 
-    status.unsupportedInheritence = not isValid_inheritence(problem)
     status.unsupportedRelationshipType = not isValid_action_relationships(problem)
     if status.success:
         status.otherError = not can_translate(problem)
 
     return status
-
-
-def isValid_inheritence(problem: Problem) -> bool:
-    for type in problem.user_types:
-        if len(list(type.ancestors)) > 1:
-            return False
-    
-    return True
 
 
 def isValid_action_relationships(problem: Problem) -> bool:
