@@ -21,7 +21,9 @@ class Arc:
                 raise Exception("Value color must match place color")
             self.values = values
         else:
-            self.values = WeightedValues(place.color, values) if values is not None else WeightedValues(place.color)
+            self.values = WeightedValues(place.color)
+            if values is not None:
+                self.values.absorb(values)
 
     def set_weight(self, value: "Value", weight: int):
         self.values.set(value, weight)
