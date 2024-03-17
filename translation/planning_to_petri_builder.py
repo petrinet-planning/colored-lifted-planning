@@ -6,6 +6,7 @@ from unified_planning.model import Problem, Action, OperatorKind, FNode, types, 
 from petrinet import *
 from petrinet.guard import *
 from petrinet.guardex import *
+import time
 
 
 class ArcDirections(Enum):
@@ -34,7 +35,6 @@ class PlanningToPetriBuilder(object):
         self.pn = PetriNet(self.problem.name)
 
         self.make_hierarchy()
-
         self.make_base_colors()
         self.make_places()
         self.make_transitions()
@@ -240,11 +240,12 @@ class PlanningToPetriBuilder(object):
     def generate_initial_marking(self) -> Marking:
         initialMarking = Marking()
 
-        for pred, truth in self.problem.initial_values.items():
-            if str(truth) != "true":
-                continue
-
+        for pred, truth in self.problem.explicit_initial_values.items():
+            #if str(truth) != "true":
+            #    continue
+            
             place = self.get_place(pred)
+
             value = self.get_value_literal(pred)
 
             initialMarking.set(place, value, 1)
