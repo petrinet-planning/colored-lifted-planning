@@ -199,9 +199,9 @@ class PlanningToPetriBuilder(object):
     def generate_initial_marking(self) -> Marking:
         initialMarking = Marking()
 
-        for pred, truth in self.problem.initial_values.items():
-            if str(truth) != "true":
-                continue
+        for pred, truth in self.problem.explicit_initial_values.items():
+            #if str(truth) != "true":
+            #    continue
 
             place = self.get_place(pred)
             value = self.get_value_literal(pred)
@@ -230,6 +230,7 @@ class PlanningToPetriBuilder(object):
         goal = self.pn.add_transition(Transition("goal"))
         for place, values in goalMarking.values.items():
             self.pn.add_arc(ArcPlaceToTransition(place, goal, values))
+            self.pn.add_arc(ArcTransitionToPlace(goal, place, values)) #MCC change
 
 
 
