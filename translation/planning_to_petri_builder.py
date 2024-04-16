@@ -6,6 +6,7 @@ from unified_planning.model import Problem, Action, OperatorKind, FNode, types, 
 from petrinet import *
 from petrinet.guard import *
 from petrinet.guardex import *
+from .type_node import TypeNode
 
 
 class ArcDirections(Enum):
@@ -14,6 +15,7 @@ class ArcDirections(Enum):
     PLACE_TO_TRANSITION = 0b01
     TRANSITION_TO_PLACE = 0b10
     BOTH = 0b11
+
 
 class PlanningToPetriBuilder(object):
     pn: PetriNet
@@ -54,16 +56,61 @@ class PlanningToPetriBuilder(object):
             
         return descendants
     
+    # def create_hierarchy(self, hierarchy, type):
+    #     for descendant in self.problem.user_types_hierarchy.get(type, []):
+    #         hierarchy[descendant.name] = TypeNode(descendant.name, hierarchy[type])
+    #         hierarchy[type].descendants.append(hierarchy[descendant.name])
+    #         self.create_hierarchy(hierarchy, descendant.name)
+
+    #     return hierarchy
+
 
     def make_hierarchy(self):
         self.hierarchy = dict()
-        for usertype in self.problem.user_types:
-            self.hierarchy[usertype.name] = [obj.name for obj in self.problem.all_objects if obj.type.name == usertype.name or obj.type.name in self.get_all_descendants(usertype, self.problem.user_types_hierarchy)] # or obj.type.name in usertype.ancestors
-    
+
+        for type_name, descendants in self.problem.user_types_hierarchy.items():
+            if type_name not in self.hierarchy:
+                self.hierarchy[type_name] = TypeNode(type_name)
+
+            
+            for descendant_name in descendants:
+                if descendant_name not in self.hierarchy:
+                    self.hierarchy[descendant_name] = TypeNode(descendant_name, self.hierarchy[type_name])
+                
+                self.hierarchy[type_name].descendants.append(self.hierarchy[descendant_name])
+            
+        for obj in self.problem.all_objects:
+            self.hierarchy[obj.type].objects.append(obj.name)
+
+        
+
+    def create_ordered_objects(self, type):
+        ordered_objects = []
+
+        # Access properties of the type object
+        ordered_objects.append(type.first_object)
+        ordered_objects.extend(type.objects)
+
+        for descendant in type.descendants:
+            ordered_objects.extend(self.create_ordered_objects(descendant))
+        
+        ordered_objects.append(type.last_object)
+
+        return ordered_objects
+
 
     def make_base_colors(self):
         
         self.type_colors["object"] = EnumerationColor("object")
+
+
+        #Creating an alternative all_objects using the type hierarchy
+        root = self.hierarchy[None]
+        ordered_all_objects = self.create_ordered_objects(root) 
+
+
+
+
 
         #for usertype in self.problem.user_types:
         #    self.type_colors[usertype.name] = EnumerationColor(usertype.name)
@@ -72,8 +119,8 @@ class PlanningToPetriBuilder(object):
 
         #todo: assumption, no 2 objects have the same name 
 
-        for obj in self.problem.all_objects:
-            self.type_literals[obj.name] = self.type_colors["object"].add(EnumerationColorLiteral(self.type_colors["object"], obj.name))
+        for obj in ordered_all_objects:
+            self.type_literals[obj] = self.type_colors["object"].add(EnumerationColorLiteral(self.type_colors["object"], obj))
 
 
     def get_or_make_param_color(self, signature: list[types._UserType]) -> Color:
@@ -220,9 +267,9 @@ class PlanningToPetriBuilder(object):
             for param in action.parameters:
                 variable = self.get_or_make_variable(param.name, "object")
                 if transition.guardex is None:
-                    transition.guardex = GuardExpression.build_guard(self.hierarchy[param.type.name], variable)
+                    transition.guardex = GuardExpression.build_guard(self.hierarchy[param.type], variable)
                 else:
-                    transition.guardex = GuardExpression(op="and", left=GuardExpression.build_guard(self.hierarchy[param.type.name], variable), right=transition.guardex)
+                    transition.guardex = GuardExpression(op="and", left=GuardExpression.build_guard(self.hierarchy[param.type], variable), right=transition.guardex)
 
 
     def get_place(self, pred: FNode):
