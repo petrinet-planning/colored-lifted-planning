@@ -1,4 +1,5 @@
 from .variable import Variable
+from translation.type_node import TypeNode
 
 class GuardExpression:
     def __init__(self, op=None, left=None, right=None, value=None):
@@ -18,28 +19,12 @@ class GuardExpression:
             return f"({self.left} {self.op} {self.right})"
         
     #This method is only for generating the type guards for the transitions. These are of the form "x eq l0 or x eq l1 or x eq l2"
-    def build_guard(objects: list[str], variable):
-        if not objects:
-            return None
+    def build_guard(type: TypeNode, variable):
         
-        #Base case
-        if len(objects) == 1:
-            return GuardExpression(op="eq", left=GuardExpression(value=variable), right=GuardExpression(value=objects[0]))
+        return GuardExpression(op="and", left = GuardExpression(op="gte", left=GuardExpression(value=variable), right=GuardExpression(value=type.first_object)), right=GuardExpression(op="lte", left=GuardExpression(value=variable), right=GuardExpression(value=type.last_object)))
 
-        #Recursive case
-        type1 = objects[0]
-        type2 = objects[1]
-        rest = objects[2:]
 
-        expr_type1 = GuardExpression(op="eq", left=GuardExpression(value=variable), right=GuardExpression(value=type1))
-        expr_type2 = GuardExpression(op="eq", left=GuardExpression(value=variable), right=GuardExpression(value=type2))
-
-        combined_expr = GuardExpression(op="or", left=expr_type1, right=expr_type2)
-
-        if rest:
-            return GuardExpression(op="or", left=combined_expr, right=GuardExpression.build_guard(rest, variable))
-        else:
-            return combined_expr
+        
 
     def generate_pnml(self):
         return f""" <condition>
@@ -63,6 +48,7 @@ class GuardExpression:
                                 {self.left.generate_pnml_structure()}
                             </subterm>
                         </not>"""
+        
         elif self.op == "eq":
             return f""" <subterm>
                             <equality>
@@ -74,6 +60,31 @@ class GuardExpression:
                                 </subterm>
                             </equality>
                         </subterm>"""
+        
+        elif self.op == "gte":
+            return f""" <subterm>
+                            <greaterthanorequal>
+                                <subterm>
+                                    {self.left.generate_pnml_structure()}
+                                </subterm>
+                                <subterm>
+                                    {self.right.generate_pnml_structure()}
+                                </subterm>
+                            </greaterthanorequal>
+                        </subterm>"""
+        
+        elif self.op == "lte":
+            return f""" <subterm>
+                            <lessthanorequal>
+                                <subterm>
+                                    {self.left.generate_pnml_structure()}
+                                </subterm>
+                                <subterm>
+                                    {self.right.generate_pnml_structure()}
+                                </subterm>
+                            </lessthanorequal>
+                        </subterm>"""
+
         else:
             return f"""<{self.op}>
                             <subterm>
@@ -85,99 +96,57 @@ class GuardExpression:
                         </{self.op}>"""
         
     """
-    <condition>
-                    <text>((z eq t0 and ((x eq l0 or x eq l1) or x eq l2)) and ((z eq l0 or z eq l1) or z eq l2))</text>
+     <condition>
+                    <text>((l gte l0 and l lte l2) and (p gte p0 and p lte p0))</text>
                     <structure>
                         <and>
                             <subterm>
                                 <and>
                                     <subterm>
-                                        <equality>
+                                        <greaterthanorequal>
                                             <subterm>
-                                                <variable refvariable="Varz"/>
+                                                <variable refvariable="Varl"/>
                                             </subterm>
                                             <subterm>
-                                                <useroperator declaration="t0"/>
+                                                <useroperator declaration="l0"/>
                                             </subterm>
-                                        </equality>
+                                        </greaterthanorequal>
                                     </subterm>
                                     <subterm>
-                                        <or>
+                                        <lessthanorequal>
                                             <subterm>
-                                                <or>
-                                                    <subterm>
-                                                        <equality>
-                                                            <subterm>
-                                                                <variable refvariable="Varx"/>
-                                                            </subterm>
-                                                            <subterm>
-                                                                <useroperator declaration="l0"/>
-                                                            </subterm>
-                                                        </equality>
-                                                    </subterm>
-                                                    <subterm>
-                                                        <equality>
-                                                            <subterm>
-                                                                <variable refvariable="Varx"/>
-                                                            </subterm>
-                                                            <subterm>
-                                                                <useroperator declaration="l1"/>
-                                                            </subterm>
-                                                        </equality>
-                                                    </subterm>
-                                                </or>
-                                            </subterm>
-                                            <subterm>
-                                                <equality>
-                                                    <subterm>
-                                                        <variable refvariable="Varx"/>
-                                                    </subterm>
-                                                    <subterm>
-                                                        <useroperator declaration="l2"/>
-                                                    </subterm>
-                                                </equality>
-                                            </subterm>
-                                        </or>
-                                    </subterm>
-                                </and>
-                            </subterm>
-                            <subterm>
-                                <or>
-                                    <subterm>
-                                        <or>
-                                            <subterm>
-                                                <equality>
-                                                    <subterm>
-                                                        <variable refvariable="Varz"/>
-                                                    </subterm>
-                                                    <subterm>
-                                                        <useroperator declaration="l0"/>
-                                                    </subterm>
-                                                </equality>
-                                            </subterm>
-                                            <subterm>
-                                                <equality>
-                                                    <subterm>
-                                                        <variable refvariable="Varz"/>
-                                                    </subterm>
-                                                    <subterm>
-                                                        <useroperator declaration="l1"/>
-                                                    </subterm>
-                                                </equality>
-                                            </subterm>
-                                        </or>
-                                    </subterm>
-                                    <subterm>
-                                        <equality>
-                                            <subterm>
-                                                <variable refvariable="Varz"/>
+                                                <variable refvariable="Varl"/>
                                             </subterm>
                                             <subterm>
                                                 <useroperator declaration="l2"/>
                                             </subterm>
-                                        </equality>
+                                        </lessthanorequal>
                                     </subterm>
-                                </or>
+                                </and>
+                            </subterm>
+                            <subterm>
+                                <and>
+                                    <subterm>
+                                        <greaterthanorequal>
+                                            <subterm>
+                                                <variable refvariable="Varp"/>
+                                            </subterm>
+                                            <subterm>
+                                                <useroperator declaration="p0"/>
+                                            </subterm>
+                                        </greaterthanorequal>
+                                    </subterm>
+                                    <subterm>
+                                        <lessthanorequal>
+                                            <subterm>
+                                                <variable refvariable="Varp"/>
+                                            </subterm>
+                                            <subterm>
+                                                <useroperator declaration="p0"/>
+                                            </subterm>
+                                        </lessthanorequal>
+                                    </subterm>
+                                </and>
                             </subterm>
                         </and>
                     </structure>
