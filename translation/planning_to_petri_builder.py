@@ -282,7 +282,7 @@ class PlanningToPetriBuilder(object):
     def generate_initial_marking(self) -> Marking:
         initialMarking = Marking()
 
-        for pred, truth in self.problem.initial_values.items():
+        for pred, truth in self.problem.explicit_initial_values.items():
             if str(truth) != "true":
                 continue
 
