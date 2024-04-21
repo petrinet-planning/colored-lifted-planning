@@ -4,5 +4,3 @@ class TypeNode:
         self.ancestor = ancestor
         self.descendants = []
         self.objects = []
-        self.first_object = (str(name).split()[0] + "_s")
-        self.last_object = (str(name).split()[0] + "_e")

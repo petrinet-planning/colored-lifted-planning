@@ -84,43 +84,38 @@ class PlanningToPetriBuilder(object):
 
         
 
-    def create_ordered_objects(self, type):
-        ordered_objects = []
-
-        # Access properties of the type object
-        ordered_objects.append(type.first_object)
-        ordered_objects.extend(type.objects)
+    def create_ordered_colors(self, type):
+        for obj in type.objects:
+            self.type_literals[obj] = self.type_colors["object"].add(EnumerationColorLiteral(self.type_colors["object"], obj))
 
         for descendant in type.descendants:
-            ordered_objects.extend(self.create_ordered_objects(descendant))
-        
-        ordered_objects.append(type.last_object)
+            self.create_ordered_colors(descendant)
 
-        return ordered_objects
+        if type.objects:
+            type.first_object = type.objects[0]
+        else:
+            for descendant in type.descendants:
+                if descendant.first_object:
+                    type.first_object = descendant.first_object
+                    break
+        
+        if type.objects:
+            type.last_object = type.objects[-1]
+        else:
+            for descendant in reversed(type.descendants):
+                if descendant.last_object:
+                    type.last_object = descendant.last_object
+                    break
 
 
     def make_base_colors(self):
         
         self.type_colors["object"] = EnumerationColor("object")
 
-
-        #Creating an alternative all_objects using the type hierarchy
+        #The root is always called None
         root = self.hierarchy[None]
-        ordered_all_objects = self.create_ordered_objects(root) 
+        self.create_ordered_colors(root) 
 
-
-
-
-
-        #for usertype in self.problem.user_types:
-        #    self.type_colors[usertype.name] = EnumerationColor(usertype.name)
-
-        # self.type_colors[""] = DotColor()
-
-        #todo: assumption, no 2 objects have the same name 
-
-        for obj in ordered_all_objects:
-            self.type_literals[obj] = self.type_colors["object"].add(EnumerationColorLiteral(self.type_colors["object"], obj))
 
 
     def get_or_make_param_color(self, signature: list[types._UserType]) -> Color:
