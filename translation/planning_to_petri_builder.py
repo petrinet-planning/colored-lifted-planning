@@ -99,13 +99,13 @@ class PlanningToPetriBuilder(object):
                     type.first_object = descendant.first_object
                     break
         
-        if type.objects:
-            type.last_object = type.objects[-1]
+        for descendant in reversed(type.descendants):
+            if descendant.last_object:
+                type.last_object = descendant.last_object
+                break
         else:
-            for descendant in reversed(type.descendants):
-                if descendant.last_object:
-                    type.last_object = descendant.last_object
-                    break
+            if type.objects:
+                type.last_object = type.objects[-1]
 
 
     def make_base_colors(self):
