@@ -1,6 +1,7 @@
 from unified_planning.io import PDDLReader
 from unified_planning.model import Problem
 from translation.planning_to_petri_builder import PlanningToPetriBuilder, generate_goal_query_xml
+from translation.validator import isValid_inheritence
 
 
 def translate_problem(
@@ -11,6 +12,9 @@ def translate_problem(
 ):
     reader = PDDLReader()
     pddl_problem: Problem = reader.parse_problem(pddl_domain_path, pddl_problem_path)
+
+    if not isValid_inheritence(pddl_problem):
+        raise Exception("Problem has unsupported inheritance")
 
     builder = PlanningToPetriBuilder(pddl_problem)
 
